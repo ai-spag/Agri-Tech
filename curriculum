@@ -7,3 +7,27 @@ pub struct LeaseContract {
     pub start_time: i64,
     pub duration: i64,
 }
+**Week 8: Leasing Smart Contracts**
+- **Lecture Topics:**
+  - Smart leasing in agri-business
+  - Structuring rental timeframes and default logic
+- **Exploration:**
+  - Write and deploy contract for leasing vertical planters
+
+```rust
+#[derive(Accounts)]
+pub struct StartLease<'info> {
+    #[account(mut)]
+    pub tenant: Signer<'info>,
+    #[account(init, payer = tenant, space = 8 + Lease::LEN)]
+    pub lease: Account<'info, Lease>,
+    pub system_program: Program<'info, System>,
+}
+
+pub fn start_lease(ctx: Context<StartLease>, weeks: u8, cost: u64) -> Result<()> {
+    let lease = &mut ctx.accounts.lease;
+    lease.duration_weeks = weeks;
+    lease.amount_paid = cost;
+    lease.start_timestamp = Clock::get()?.unix_timestamp;
+    Ok(())
+}
