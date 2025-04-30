@@ -1,1 +1,102 @@
-DAO governance files, proposals, voting rules
+use anchor_lang::prelude::*;
+use anchor_lang::solana_program::clock::UnixTimestamp;
+
+// DAO Governance Contract for eAI-G9 Agri-Tech Pioneers
+
+declare_id!("DaoG9pioneers1111111111111111111111111111111111");
+
+#[program]
+pub mod dao_governance {
+    use super::*;
+
+    pub fn initialize_dao(ctx: Context<InitializeDao>, voting_period: i64) -> Result<()> {
+        let dao = &mut ctx.accounts.dao;
+        dao.creator = *ctx.accounts.creator.key;
+        dao.voting_period = voting_period;
+        dao.total_proposals = 0;
+        Ok(())
+    }
+
+    pub fn create_proposal(ctx: Context<CreateProposal>, title: String, description: String) -> Result<()> {
+        let proposal = &mut ctx.accounts.proposal;
+        let dao = &mut ctx.accounts.dao;
+
+        proposal.creator = *ctx.accounts.creator.key;
+        proposal.title = title;
+        proposal.description = description;
+        proposal.start_time = Clock::get()?.unix_timestamp;
+        proposal.end_time = proposal.start_time + dao.voting_period;
+        proposal.votes_for = 0;
+        proposal.votes_against = 0;
+        proposal.executed = false;
+
+        dao.total_proposals += 1;
+        Ok(())
+    }
+
+    pub fn vote(ctx: Context<Vote>, vote_for: bool) -> Result<()> {
+        let proposal = &mut ctx.accounts.proposal;
+        let clock = Clock::get()?.unix_timestamp;
+
+        require!(clock < proposal.end_time, CustomError::VotingEnded);
+
+        if vote_for {
+            proposal.votes_for += 1;
+        } else {
+            proposal.votes_against += 1;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+pub struct InitializeDao<'info> {
+    #[account(init, payer = creator, space = 8 + 40)]
+    pub dao: Account<'info, Dao>,
+    #[account(mut)]
+    pub creator: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct CreateProposal<'info> {
+    #[account(mut)]
+    pub dao: Account<'info, Dao>,
+    #[account(init, payer = creator, space = 8 + 280)]
+    pub proposal: Account<'info, Proposal>,
+    #[account(mut)]
+    pub creator: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct Vote<'info> {
+    #[account(mut)]
+    pub proposal: Account<'info, Proposal>,
+    pub voter: Signer<'info>,
+}
+
+#[account]
+pub struct Dao {
+    pub creator: Pubkey,
+    pub voting_period: UnixTimestamp,
+    pub total_proposals: u64,
+}
+
+#[account]
+pub struct Proposal {
+    pub creator: Pubkey,
+    pub title: String,
+    pub description: String,
+    pub start_time: UnixTimestamp,
+    pub end_time: UnixTimestamp,
+    pub votes_for: u64,
+    pub votes_against: u64,
+    pub executed: bool,
+}
+
+#[error_code]
+pub enum CustomError {
+    #[msg("Voting period has ended.")]
+    VotingEnded,
+}
