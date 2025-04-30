@@ -1,56 +1,46 @@
-// Root directory of the Agri-Tech Pioneer project
-// Below is a basic structure with representative Rust-based Solana smart contract (Anchor framework) examples.
-
-/* contracts/vertical_farm.rs */
+// contracts/leasing/src/lib.rs
 use anchor_lang::prelude::*;
 
+declare_id!("LeasePlanters1111111111111111111111111111111111");
+
 #[program]
-pub mod vertical_farm {
+pub mod leasing {
     use super::*;
 
-    pub fn initialize_farm(ctx: Context<InitializeFarm>, farm_name: String) -> Result<()> {
-        let farm = &mut ctx.accounts.farm;
-        farm.name = farm_name;
-        farm.manager = *ctx.accounts.manager.key;
+    pub fn initialize_planter(ctx: Context<InitializePlanter>, lease_rate: u64) -> Result<()> {
+        let planter = &mut ctx.accounts.planter;
+        planter.owner = *ctx.accounts.user.key;
+        planter.lease_rate = lease_rate;
+        planter.current_lessee = None;
         Ok(())
     }
 
-    pub fn log_crop_data(ctx: Context<LogCropData>, crop_type: String, weight_kg: u32) -> Result<()> {
-        let crop = &mut ctx.accounts.crop;
-        crop.crop_type = crop_type;
-        crop.weight_kg = weight_kg;
-        crop.timestamp = Clock::get()?.unix_timestamp;
+    pub fn lease_planter(ctx: Context<LeasePlanter>) -> Result<()> {
+        let planter = &mut ctx.accounts.planter;
+        planter.current_lessee = Some(*ctx.accounts.lessee.key);
         Ok(())
     }
 }
 
 #[derive(Accounts)]
-pub struct InitializeFarm<'info> {
-    #[account(init, payer = manager, space = 8 + 64)]
-    pub farm: Account<'info, Farm>,
-    #[account(mut)]
-    pub manager: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct LogCropData<'info> {
-    #[account(init, payer = user, space = 8 + 64)]
-    pub crop: Account<'info, CropLog>,
+pub struct InitializePlanter<'info> {
+    #[account(init, payer = user, space = 8 + 32 + 8 + 32)]
+    pub planter: Account<'info, PlanterUnit>,
     #[account(mut)]
     pub user: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
-#[account]
-pub struct Farm {
-    pub name: String,
-    pub manager: Pubkey,
+#[derive(Accounts)]
+pub struct LeasePlanter<'info> {
+    #[account(mut)]
+    pub planter: Account<'info, PlanterUnit>,
+    pub lessee: Signer<'info>,
 }
 
 #[account]
-pub struct CropLog {
-    pub crop_type: String,
-    pub weight_kg: u32,
-    pub timestamp: i64,
+pub struct PlanterUnit {
+    pub owner: Pubkey,
+    pub lease_rate: u64,
+    pub current_lessee: Option<Pubkey>,
 }
