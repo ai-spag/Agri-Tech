@@ -2,3 +2,14 @@
 // Lecture: Front-end dashboards, tracking contracts
 // Exploration: Use GraphQL to query Solana and visualize crop data
 // Code integrated into front-end (not smart contract)
+
+**Week 9–10: Data Dashboards & Admin Tools**
+- **Lecture Topics:**
+  - Indexing on-chain data
+  - GraphQL, APIs, and charting libraries
+- **Exploration:**
+  - Build real-time visual dashboard with Solana GraphQL endpoint
+  - Use The Graph or a custom indexer to visualize:
+    - Token sale activity
+    - Sensor values
+    - Lease expirations
