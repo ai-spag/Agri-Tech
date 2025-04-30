@@ -13,3 +13,21 @@ pub struct Proposal {
     pub requested_funds: u64,
     pub votes: u32,
 }
+**Week 11: DAO Treasury & Scaling Governance**
+- **Lecture Topics:**
+  - Treasury management on Solana
+  - Managing group proposals
+- **Exploration:**
+  - Vote to allocate DAO treasury to purchase new sensors
+  - Implement DAO budget proposal structure
+
+```rust
+#[derive(Accounts)]
+pub struct SubmitProposal<'info> {
+    #[account(mut)]
+    pub dao_treasury: Account<'info, Treasury>,
+    pub proposer: Signer<'info>,
+    #[account(init, payer = proposer, space = 8 + Proposal::LEN)]
+    pub proposal: Account<'info, Proposal>,
+    pub system_program: Program<'info, System>,
+}
