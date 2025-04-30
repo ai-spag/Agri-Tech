@@ -4,3 +4,15 @@
 fn showcase_event() {
     println!("Presenting DAO-governed vertical farming systems!");
 }
+**Weeks 13–14: Showcase (Demo Days)**
+- **Presentations:**
+  - Each group demos a smart contract related to:
+    - DAO voting
+    - Crop tracking
+    - Vertical planter leasing
+  - Present UI dashboard for their smart farm plot
+  - Highlight QR-enabled crop traceability for sale
+
+- **Invited Audience:**
+  - Community members, school leaders, local farms, tech sponsors
+  - Vote on “Most Innovative”, “Best Marketplace”, “Best Pitch”
