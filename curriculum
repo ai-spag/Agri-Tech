@@ -13,3 +13,26 @@ pub struct SensorLog {
     pub ph_level: f32,
     pub timestamp: i64,
 }
+**Week 6: IoT Sensors + Data Logging**
+- **Lecture Topics:**
+  - Role of IoT in smart farming
+  - Off-chain vs on-chain data
+  - Introduction to Oracle systems and sensor bridges
+- **Exploration:**
+  - Simulate real-time pH/moisture sensor readings
+  - Format mock data into JSON and post to a mocked oracle endpoint
+  - Push oracle data to a Rust-based contract that logs crop conditions
+
+```rust
+#[derive(Accounts)]
+pub struct LogSensorData<'info> {
+    #[account(mut)]
+    pub farm_state: Account<'info, FarmState>,
+    pub signer: Signer<'info>,
+}
+
+pub fn log_sensor_data(ctx: Context<LogSensorData>, ph: u8, moisture: u8) -> Result<()> {
+    let farm = &mut ctx.accounts.farm_state;
+    farm.sensor_log.push((ph, moisture, Clock::get()?.unix_timestamp));
+    Ok(())
+}
