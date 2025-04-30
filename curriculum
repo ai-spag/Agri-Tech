@@ -7,3 +7,29 @@ pub struct CropSale {
     pub price: u64,
     pub is_sold: bool,
 }
+**Week 7: Tokenized Sales**
+- **Lecture Topics:**
+  - Introduction to agri-marketplaces
+  - How escrow protects both buyers and sellers
+  - Fungible vs non-fungible token (NFT) crops
+- **Exploration:**
+  - Create SPL token for crop units (e.g., 1 token = 1 lb of potatoes)
+  - Deploy escrow contract:
+
+```rust
+#[derive(Accounts)]
+pub struct CreateSale<'info> {
+    #[account(mut)]
+    pub seller: Signer<'info>,
+    #[account(init, payer = seller, space = 8 + Sale::LEN)]
+    pub sale: Account<'info, Sale>,
+    pub system_program: Program<'info, System>,
+}
+
+pub fn create_sale(ctx: Context<CreateSale>, price: u64, crop_type: u8) -> Result<()> {
+    let sale = &mut ctx.accounts.sale;
+    sale.price = price;
+    sale.crop_type = crop_type;
+    sale.is_active = true;
+    Ok(())
+}
