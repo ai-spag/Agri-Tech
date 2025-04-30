@@ -1,4 +1,4 @@
-// Root directory of the eAI-G9 Agri-Tech Pioneer project
+// Root directory of the Agri-Tech Pioneer project
 // Below is a basic structure with representative Rust-based Solana smart contract (Anchor framework) examples.
 
 /* contracts/vertical_farm.rs */
