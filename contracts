@@ -1,56 +1,61 @@
-// Root directory of the Agri-Tech Pioneer project
-// Below is a basic structure with representative Rust-based Solana smart contract (Anchor framework) examples.
-
-/* contracts/vertical_farm.rs */
 use anchor_lang::prelude::*;
 
+// Program ID must match what's used during deployment
 #[program]
-pub mod vertical_farm {
+pub mod crop_tracking {
     use super::*;
 
-    pub fn initialize_farm(ctx: Context<InitializeFarm>, farm_name: String) -> Result<()> {
-        let farm = &mut ctx.accounts.farm;
-        farm.name = farm_name;
-        farm.manager = *ctx.accounts.manager.key;
-        Ok(())
-    }
-
-    pub fn log_crop_data(ctx: Context<LogCropData>, crop_type: String, weight_kg: u32) -> Result<()> {
+    pub fn initialize_crop(ctx: Context<InitializeCrop>, crop_type: String, planting_date: i64) -> Result<()> {
         let crop = &mut ctx.accounts.crop;
+        crop.owner = *ctx.accounts.authority.key;
         crop.crop_type = crop_type;
-        crop.weight_kg = weight_kg;
-        crop.timestamp = Clock::get()?.unix_timestamp;
+        crop.planting_date = planting_date;
+        crop.growth_stage = "Seeded".to_string();
+        crop.harvested = false;
+        Ok(())
+    }
+
+    pub fn update_growth_stage(ctx: Context<UpdateGrowthStage>, new_stage: String) -> Result<()> {
+        let crop = &mut ctx.accounts.crop;
+        crop.growth_stage = new_stage;
+        Ok(())
+    }
+
+    pub fn mark_harvested(ctx: Context<HarvestCrop>) -> Result<()> {
+        let crop = &mut ctx.accounts.crop;
+        crop.harvested = true;
         Ok(())
     }
 }
 
 #[derive(Accounts)]
-pub struct InitializeFarm<'info> {
-    #[account(init, payer = manager, space = 8 + 64)]
-    pub farm: Account<'info, Farm>,
+pub struct InitializeCrop<'info> {
+    #[account(init, payer = authority, space = 8 + 128)]
+    pub crop: Account<'info, Crop>,
     #[account(mut)]
-    pub manager: Signer<'info>,
+    pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
-pub struct LogCropData<'info> {
-    #[account(init, payer = user, space = 8 + 64)]
-    pub crop: Account<'info, CropLog>,
-    #[account(mut)]
-    pub user: Signer<'info>,
-    pub system_program: Program<'info, System>,
+pub struct UpdateGrowthStage<'info> {
+    #[account(mut, has_one = owner)]
+    pub crop: Account<'info, Crop>,
+    pub owner: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct HarvestCrop<'info> {
+    #[account(mut, has_one = owner)]
+    pub crop: Account<'info, Crop>,
+    pub owner: Signer<'info>,
 }
 
 #[account]
-pub struct Farm {
-    pub name: String,
-    pub manager: Pubkey,
-}
-
-#[account]
-pub struct CropLog {
+pub struct Crop {
+    pub owner: Pubkey,
     pub crop_type: String,
-    pub weight_kg: u32,
-    pub timestamp: i64,
+    pub planting_date: i64,
+    pub growth_stage: String,
+    pub harvested: bool,
 }
