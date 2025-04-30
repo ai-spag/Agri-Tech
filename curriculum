@@ -7,3 +7,10 @@ pub struct SupplyChainLog {
     pub stage: String,
     pub timestamp: i64,
 }
+**Week 12: Supply Chains & Traceability**
+- **Lecture Topics:**
+  - Supply chain tokenization and QR codes
+  - Logistics mapping with blockchain
+- **Exploration:**
+  - Trace a crop from planting → harvest → sale using QR logs
+  - Deploy full lifecycle trace contract and assign to a QR code
