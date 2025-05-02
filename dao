@@ -1,102 +1,142 @@
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::clock::UnixTimestamp;
+import React, { useState, useEffect } from 'react';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { useWallet, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { Program, AnchorProvider, web3, utils, BN } from '@project-serum/anchor';
 
-// DAO Governance Contract for eAI-G9 Agri-Tech Pioneers
-
-declare_id!("DaoG9pioneers1111111111111111111111111111111111");
-
-#[program]
-pub mod dao_governance {
-    use super::*;
-
-    pub fn initialize_dao(ctx: Context<InitializeDao>, voting_period: i64) -> Result<()> {
-        let dao = &mut ctx.accounts.dao;
-        dao.creator = *ctx.accounts.creator.key;
-        dao.voting_period = voting_period;
-        dao.total_proposals = 0;
-        Ok(())
+// Dummy placeholder to simulate IDL content
+const dummyIdl = {
+  "metadata": {
+    "address": "INSERT_REAL_PROGRAM_ID_HERE"
+  },
+  "accounts": [
+    {
+      "name": "cropProposal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "name", "type": "string" },
+          { "name": "votes", "type": "u32" }
+        ]
+      }
     }
+  ],
+  "instructions": []
+};
 
-    pub fn create_proposal(ctx: Context<CreateProposal>, title: String, description: String) -> Result<()> {
-        let proposal = &mut ctx.accounts.proposal;
-        let dao = &mut ctx.accounts.dao;
+const programID = new PublicKey(dummyIdl.metadata.address);
+const network = 'https://api.devnet.solana.com';
+const opts = {
+  preflightCommitment: 'processed'
+};
 
-        proposal.creator = *ctx.accounts.creator.key;
-        proposal.title = title;
-        proposal.description = description;
-        proposal.start_time = Clock::get()?.unix_timestamp;
-        proposal.end_time = proposal.start_time + dao.voting_period;
-        proposal.votes_for = 0;
-        proposal.votes_against = 0;
-        proposal.executed = false;
+function App() {
+  const wallet = useWallet();
+  const [program, setProgram] = useState(null);
+  const [cropName, setCropName] = useState('');
+  const [proposals, setProposals] = useState([]);
 
-        dao.total_proposals += 1;
-        Ok(())
+  const getProvider = () => {
+    const connection = new Connection(network, opts.preflightCommitment);
+    return new AnchorProvider(connection, wallet, opts);
+  };
+
+  const fetchProgram = async () => {
+    const provider = getProvider();
+    const program = new Program(dummyIdl, programID, provider);
+    setProgram(program);
+  };
+
+  const fetchProposals = async () => {
+    if (!program) return;
+    try {
+      const allProposals = await program.account.cropProposal.all();
+      setProposals(allProposals);
+    } catch (err) {
+      console.error('Error fetching proposals:', err);
     }
+  };
 
-    pub fn vote(ctx: Context<Vote>, vote_for: bool) -> Result<()> {
-        let proposal = &mut ctx.accounts.proposal;
-        let clock = Clock::get()?.unix_timestamp;
+  const submitProposal = async () => {
+    const provider = getProvider();
+    const [proposalPda] = await PublicKey.findProgramAddress(
+      [utils.bytes.utf8.encode('proposal'), wallet.publicKey.toBuffer()],
+      program.programId
+    );
 
-        require!(clock < proposal.end_time, CustomError::VotingEnded);
+    await program.methods
+      .createProposal(cropName)
+      .accounts({
+        proposal: proposalPda,
+        user: wallet.publicKey,
+        systemProgram: web3.SystemProgram.programId
+      })
+      .rpc();
 
-        if vote_for {
-            proposal.votes_for += 1;
-        } else {
-            proposal.votes_against += 1;
-        }
-        Ok(())
+    setCropName('');
+    fetchProposals();
+  };
+
+  const castVote = async (proposalPubkey) => {
+    await program.methods
+      .vote()
+      .accounts({
+        proposal: proposalPubkey,
+        user: wallet.publicKey
+      })
+      .rpc();
+    fetchProposals();
+  };
+
+  useEffect(() => {
+    if (wallet.connected) {
+      fetchProgram();
     }
+  }, [wallet.connected]);
+
+  useEffect(() => {
+    if (program) {
+      fetchProposals();
+    }
+  }, [program]);
+
+  return (
+    <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px' }}>
+      <h1>🌿 Agri-Tech DAO</h1>
+      <WalletMultiButton />
+
+      <div style={{ marginTop: '20px' }}>
+        <input
+          type="text"
+          placeholder="Enter crop name"
+          value={cropName}
+          onChange={(e) => setCropName(e.target.value)}
+        />
+        <button onClick={submitProposal} style={{ marginLeft: '10px' }}>Submit Proposal</button>
+      </div>
+
+      <h2 style={{ marginTop: '40px' }}>🗳 DAO Crop Proposals</h2>
+      <table border="1" cellPadding="10" style={{ width: '100%', marginTop: '10px' }}>
+        <thead>
+          <tr>
+            <th>Crop</th>
+            <th>Votes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {proposals.map((item, index) => (
+            <tr key={index}>
+              <td>{item.account.name}</td>
+              <td>{item.account.votes.toString()}</td>
+              <td>
+                <button onClick={() => castVote(new PublicKey(item.publicKey.toBase58()))}>Vote</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
-#[derive(Accounts)]
-pub struct InitializeDao<'info> {
-    #[account(init, payer = creator, space = 8 + 40)]
-    pub dao: Account<'info, Dao>,
-    #[account(mut)]
-    pub creator: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct CreateProposal<'info> {
-    #[account(mut)]
-    pub dao: Account<'info, Dao>,
-    #[account(init, payer = creator, space = 8 + 280)]
-    pub proposal: Account<'info, Proposal>,
-    #[account(mut)]
-    pub creator: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct Vote<'info> {
-    #[account(mut)]
-    pub proposal: Account<'info, Proposal>,
-    pub voter: Signer<'info>,
-}
-
-#[account]
-pub struct Dao {
-    pub creator: Pubkey,
-    pub voting_period: UnixTimestamp,
-    pub total_proposals: u64,
-}
-
-#[account]
-pub struct Proposal {
-    pub creator: Pubkey,
-    pub title: String,
-    pub description: String,
-    pub start_time: UnixTimestamp,
-    pub end_time: UnixTimestamp,
-    pub votes_for: u64,
-    pub votes_against: u64,
-    pub executed: bool,
-}
-
-#[error_code]
-pub enum CustomError {
-    #[msg("Voting period has ended.")]
-    VotingEnded,
-}
+export default App;
