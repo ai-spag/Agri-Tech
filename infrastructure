@@ -1,31 +1,34 @@
-# 🌐 Infrastructure Overview. (Agri-Tech + Solana)
+## 🔧 Key Modules
 
-This folder contains the technical blueprints and module-level implementations for our smart agriculture infrastructure, powered by Solana and deployed via Rust-based smart contracts.
+### 1. `sensor_node/`
+**Purpose**: Simulate and deploy IoT devices (soil moisture, pH, temperature) on Agri-Tech pilot farms.
 
-## 🧱 Subdirectory Structure
+- `sensor_emitter.rs`: Emits mock/test data from vertical planters
+- `serial_bridge.rs`: Connects real-world Arduino/Raspberry Pi sensors to blockchain gateway
+- Designed for extensibility using MQTT, HTTP, and BLE protocols
 
-```bash
-infrastructure/
-├── sensor_node/
-│   ├── sensor_emitter.rs
-│   ├── serial_bridge.rs
-│   └── README.md
-├── blockchain_gateway/
-│   ├── solana_rpc_listener.rs
-│   ├── transaction_broadcaster.rs
-│   └── README.md
-├── explorer_ui/
-│   ├── data_dashboard_react/
-│   ├── components/
-│   ├── pages/
-│   └── README.md
-├── node_deployment/
-│   ├── validator_config.yaml
-│   ├── install_solana_node.sh
-│   └── deployment_guide.md
-├── iot_oracle/
-│   ├── oracle_router.rs
-│   ├── contract_feeder.rs
-│   └── README.md
-└── README.md
-```
+### 2. `blockchain_gateway/`
+**Purpose**: Bridge sensor payloads and human data to Solana smart contracts via off-chain signing and RPC handling.
+
+- `solana_rpc_listener.rs`: Listens for validator acknowledgments of transactions
+- `transaction_broadcaster.rs`: Confirms and broadcasts confirmed events to GraphQL endpoints and admin dashboards
+
+### 3. `explorer_ui/`
+**Purpose**: Host real-time dashboards and smart contract states across farms using Solana.
+
+- `data_dashboard_react/`: React-based visual frontend connected to Anchor-based APIs
+- `components/`: Modular voting, leasing, growth monitoring widgets
+- Deployable via GitHub Pages or Netlify for community transparency
+
+### 4. `node_deployment/`
+**Purpose**: Infrastructure as Code for standing up validator nodes and full RPC nodes.
+
+- `validator_config.yaml`: Bootstrap validator on Solana Devnet/Mainnet
+- `install_solana_node.sh`: Bash script for automatic installation + ledger syncing
+- Includes guidance for Raspberry Pi and AWS EC2
+
+### 5. `iot_oracle/`
+**Purpose**: Build an on-chain and off-chain oracle to validate growing data, crop yields, and DAO votes.
+
+- `oracle_router.rs`: Routes signed telemetry from multiple sensor origins
+- `contract_feeder.rs`: Posts verified data to tokenized crop contracts for pricing triggers
