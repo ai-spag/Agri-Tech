@@ -1,6 +1,6 @@
 # 🌿 Getting Started Guide: Agri-Tech Pioneers Infrastructure (Solana + Rust)
 
-Welcome to the **Agri-Tech Pioneers** program by **eAI-G9 Inc.**, where decentralized agriculture meets cutting-edge technology. This guide outlines the technical setup needed to launch and maintain your Solana-based smart farming infrastructure.
+Welcome to the **Agri-Tech Pioneers** program, where decentralized agriculture meets cutting-edge technology. This guide outlines the technical setup needed to launch and maintain your Solana-based smart farming infrastructure.
 
 ---
 
