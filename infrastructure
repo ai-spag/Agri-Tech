@@ -1,31 +1,6 @@
-# 🌐 Infrastructure Overview. (Agri-Tech + Solana)
+## 🚀 Usage Scenarios
 
-This folder contains the technical blueprints and module-level implementations for our smart agriculture infrastructure, powered by Solana and deployed via Rust-based smart contracts.
-
-## 🧱 Subdirectory Structure
-
-```bash
-infrastructure/
-├── sensor_node/
-│   ├── sensor_emitter.rs
-│   ├── serial_bridge.rs
-│   └── README.md
-├── blockchain_gateway/
-│   ├── solana_rpc_listener.rs
-│   ├── transaction_broadcaster.rs
-│   └── README.md
-├── explorer_ui/
-│   ├── data_dashboard_react/
-│   ├── components/
-│   ├── pages/
-│   └── README.md
-├── node_deployment/
-│   ├── validator_config.yaml
-│   ├── install_solana_node.sh
-│   └── deployment_guide.md
-├── iot_oracle/
-│   ├── oracle_router.rs
-│   ├── contract_feeder.rs
-│   └── README.md
-└── README.md
-```
+- **Sensor Monitoring**: Track when soil needs watering — auto-token rewards for planters
+- **DAO Voting Transparency**: Push decisions about fertilizer use, LED schedules
+- **Lease Enforcement**: Smart contract auto-renews if pH/soil/IR temp levels are met
+- **Market Readiness**: Escrow triggers product shipment based on growth milestones
